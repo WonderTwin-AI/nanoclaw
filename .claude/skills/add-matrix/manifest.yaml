@@ -1,0 +1,23 @@
+skill: matrix
+version: 1.0.0
+description: "Matrix/Element channel integration via matrix-bot-sdk"
+core_version: 0.1.0
+adds:
+  - src/channels/matrix.ts
+  - src/channels/matrix.test.ts
+modifies:
+  - src/index.ts
+  - src/config.ts
+  - src/routing.test.ts
+structured:
+  npm_dependencies:
+    matrix-bot-sdk: "^0.8.0"
+  env_additions:
+    - MATRIX_HOMESERVER
+    - MATRIX_ACCESS_TOKEN
+    - MATRIX_USER_ID
+    - MATRIX_ONLY
+    - MATRIX_ENCRYPTION
+conflicts: []
+depends: []
+test: "npx vitest run src/channels/matrix.test.ts"
