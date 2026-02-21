@@ -6,10 +6,15 @@ import {
   DATA_DIR,
   IDLE_TIMEOUT,
   MAIN_GROUP_FOLDER,
+  MATRIX_ENCRYPTION,
+  MATRIX_HOMESERVER,
+  MATRIX_ONLY,
+  MATRIX_USER_ID,
   POLL_INTERVAL,
   TRIGGER_PATTERN,
 } from './config.js';
 import { WhatsAppChannel } from './channels/whatsapp.js';
+import { MatrixChannel } from './channels/matrix.js';
 import {
   ContainerOutput,
   runContainerAgent,
@@ -434,9 +439,28 @@ async function main(): Promise<void> {
   };
 
   // Create and connect channels
-  whatsapp = new WhatsAppChannel(channelOpts);
-  channels.push(whatsapp);
-  await whatsapp.connect();
+  if (!MATRIX_ONLY) {
+    whatsapp = new WhatsAppChannel(channelOpts);
+    channels.push(whatsapp);
+    await whatsapp.connect();
+  }
+
+  if (MATRIX_HOMESERVER && MATRIX_USER_ID) {
+    const accessToken = process.env.MATRIX_ACCESS_TOKEN || '';
+    if (accessToken) {
+      const matrix = new MatrixChannel(
+        MATRIX_HOMESERVER,
+        accessToken,
+        MATRIX_USER_ID,
+        channelOpts,
+        MATRIX_ENCRYPTION,
+      );
+      channels.push(matrix);
+      await matrix.connect();
+    } else {
+      logger.warn('MATRIX_HOMESERVER and MATRIX_USER_ID set but MATRIX_ACCESS_TOKEN missing — skipping Matrix channel');
+    }
+  }
 
   // Start subsystems (independently of connection handler)
   startSchedulerLoop({

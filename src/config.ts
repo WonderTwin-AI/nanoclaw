@@ -9,6 +9,10 @@ import { readEnvFile } from './env.js';
 const envConfig = readEnvFile([
   'ASSISTANT_NAME',
   'ASSISTANT_HAS_OWN_NUMBER',
+  'MATRIX_HOMESERVER',
+  'MATRIX_USER_ID',
+  'MATRIX_ONLY',
+  'MATRIX_ENCRYPTION',
 ]);
 
 export const ASSISTANT_NAME =
@@ -67,3 +71,13 @@ export const TRIGGER_PATTERN = new RegExp(
 // Uses system timezone by default
 export const TIMEZONE =
   process.env.TZ || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// Matrix configuration
+export const MATRIX_HOMESERVER =
+  process.env.MATRIX_HOMESERVER || envConfig.MATRIX_HOMESERVER || '';
+export const MATRIX_USER_ID =
+  process.env.MATRIX_USER_ID || envConfig.MATRIX_USER_ID || '';
+export const MATRIX_ONLY =
+  (process.env.MATRIX_ONLY || envConfig.MATRIX_ONLY) === 'true';
+export const MATRIX_ENCRYPTION =
+  (process.env.MATRIX_ENCRYPTION || envConfig.MATRIX_ENCRYPTION || 'true') === 'true';

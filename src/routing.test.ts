@@ -22,6 +22,16 @@ describe('JID ownership patterns', () => {
     const jid = '12345678@s.whatsapp.net';
     expect(jid.endsWith('@s.whatsapp.net')).toBe(true);
   });
+
+  it('Matrix JID: starts with mx:', () => {
+    const jid = 'mx:!room:example.com';
+    expect(jid.startsWith('mx:')).toBe(true);
+  });
+
+  it('Matrix JID: starts with mx: and has complex room ID', () => {
+    const jid = 'mx:!azBsCLAWcUNAifggjX:saltwyk.io';
+    expect(jid.startsWith('mx:')).toBe(true);
+  });
 });
 
 // --- getAvailableGroups ---
@@ -96,5 +106,56 @@ describe('getAvailableGroups', () => {
   it('returns empty array when no chats exist', () => {
     const groups = getAvailableGroups();
     expect(groups).toHaveLength(0);
+  });
+
+  it('includes Matrix room JIDs', () => {
+    storeChatMetadata('mx:!room1:example.com', '2024-01-01T00:00:01.000Z', 'Matrix Room', 'matrix', true);
+    storeChatMetadata('user@s.whatsapp.net', '2024-01-01T00:00:02.000Z', 'User DM', 'whatsapp', false);
+
+    const groups = getAvailableGroups();
+    expect(groups).toHaveLength(1);
+    expect(groups[0].jid).toBe('mx:!room1:example.com');
+  });
+
+  it('returns Matrix room JIDs with complex IDs', () => {
+    storeChatMetadata('mx:!azBsCLAWcUNAifggjX:saltwyk.io', '2024-01-01T00:00:01.000Z', 'Saltwyk Room', 'matrix', true);
+
+    const groups = getAvailableGroups();
+    expect(groups).toHaveLength(1);
+    expect(groups[0].jid).toBe('mx:!azBsCLAWcUNAifggjX:saltwyk.io');
+    expect(groups[0].name).toBe('Saltwyk Room');
+  });
+
+  it('marks registered Matrix rooms correctly', () => {
+    storeChatMetadata('mx:!room1:example.com', '2024-01-01T00:00:01.000Z', 'MX Registered', 'matrix', true);
+    storeChatMetadata('mx:!room2:example.com', '2024-01-01T00:00:02.000Z', 'MX Unregistered', 'matrix', true);
+
+    _setRegisteredGroups({
+      'mx:!room1:example.com': {
+        name: 'MX Registered',
+        folder: 'mx-registered',
+        trigger: '@Andy',
+        added_at: '2024-01-01T00:00:00.000Z',
+      },
+    });
+
+    const groups = getAvailableGroups();
+    const mxReg = groups.find((g) => g.jid === 'mx:!room1:example.com');
+    const mxUnreg = groups.find((g) => g.jid === 'mx:!room2:example.com');
+
+    expect(mxReg?.isRegistered).toBe(true);
+    expect(mxUnreg?.isRegistered).toBe(false);
+  });
+
+  it('mixes WhatsApp and Matrix chats ordered by activity', () => {
+    storeChatMetadata('wa@g.us', '2024-01-01T00:00:01.000Z', 'WhatsApp', 'whatsapp', true);
+    storeChatMetadata('mx:!room:example.com', '2024-01-01T00:00:03.000Z', 'Matrix', 'matrix', true);
+    storeChatMetadata('wa2@g.us', '2024-01-01T00:00:02.000Z', 'WhatsApp 2', 'whatsapp', true);
+
+    const groups = getAvailableGroups();
+    expect(groups).toHaveLength(3);
+    expect(groups[0].jid).toBe('mx:!room:example.com');
+    expect(groups[1].jid).toBe('wa2@g.us');
+    expect(groups[2].jid).toBe('wa@g.us');
   });
 });
