@@ -93,6 +93,24 @@ export class MatrixChannel implements Channel {
       // Store chat metadata for discovery (always a group in Matrix)
       this.opts.onChatMetadata(chatJid, timestamp, roomName || roomId, 'matrix', true);
 
+      // Handle bot commands in ANY room (before registration check)
+      if (msgType === 'm.text') {
+        const body = (event.content.body || '').trim();
+
+        if (body === '!chatid') {
+          await this.client!.sendText(
+            roomId,
+            `Chat ID: mx:${roomId}\nName: ${roomName || roomId}\nType: room`,
+          );
+          return;
+        }
+
+        if (body === '!ping') {
+          await this.client!.sendText(roomId, `${ASSISTANT_NAME} is online.`);
+          return;
+        }
+      }
+
       // Only deliver full message for registered groups
       const group = this.opts.registeredGroups()[chatJid];
       if (!group) {
@@ -107,21 +125,6 @@ export class MatrixChannel implements Channel {
 
       if (msgType === 'm.text') {
         content = event.content.body || '';
-
-        // Handle !chatid command
-        if (content.trim() === '!chatid') {
-          await this.client!.sendText(
-            roomId,
-            `Chat ID: mx:${roomId}\nName: ${roomName || roomId}\nType: room`,
-          );
-          return;
-        }
-
-        // Handle !ping command
-        if (content.trim() === '!ping') {
-          await this.client!.sendText(roomId, `${ASSISTANT_NAME} is online.`);
-          return;
-        }
 
         // Translate Matrix mentions (@user:server) into trigger pattern format.
         // Matrix mentions in body appear as display name, but formatted_body
