@@ -70,6 +70,11 @@ vi.mock('matrix-bot-sdk', () => {
   };
 });
 
+// Mock the sub-module path used for dynamic import of RustSdkCryptoStoreType
+vi.mock('matrix-bot-sdk/lib/storage/RustSdkCryptoStorageProvider.js', () => ({
+  RustSdkCryptoStoreType: { Sqlite: 0 },
+}));
+
 import { MatrixChannel, MatrixChannelOpts } from './matrix.js';
 
 // --- Test helpers ---

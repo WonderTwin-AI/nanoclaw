@@ -3,7 +3,6 @@ import {
   SimpleFsStorageProvider,
   AutojoinRoomsMixin,
   RustSdkCryptoStorageProvider,
-  RustSdkCryptoStoreType,
 } from 'matrix-bot-sdk';
 
 import { ASSISTANT_NAME, TRIGGER_PATTERN } from '../config.js';
@@ -51,6 +50,9 @@ export class MatrixChannel implements Channel {
 
     let cryptoProvider: RustSdkCryptoStorageProvider | undefined;
     if (this.encryption) {
+      // RustSdkCryptoStoreType.Sqlite = 0, imported from sub-module to avoid
+      // top-level ESM re-export issues with matrix-bot-sdk
+      const { RustSdkCryptoStoreType } = await import('matrix-bot-sdk/lib/storage/RustSdkCryptoStorageProvider.js');
       cryptoProvider = new RustSdkCryptoStorageProvider('store/matrix-crypto', RustSdkCryptoStoreType.Sqlite);
     }
 
