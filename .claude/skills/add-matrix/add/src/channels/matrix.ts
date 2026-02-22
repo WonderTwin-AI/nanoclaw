@@ -50,10 +50,11 @@ export class MatrixChannel implements Channel {
 
     let cryptoProvider: RustSdkCryptoStorageProvider | undefined;
     if (this.encryption) {
-      // RustSdkCryptoStoreType.Sqlite = 0, imported from sub-module to avoid
-      // top-level ESM re-export issues with matrix-bot-sdk
-      const { RustSdkCryptoStoreType } = await import('matrix-bot-sdk/lib/storage/RustSdkCryptoStorageProvider.js');
-      cryptoProvider = new RustSdkCryptoStorageProvider('store/matrix-crypto', RustSdkCryptoStoreType.Sqlite);
+      // StoreType.Sqlite = 0 from @matrix-org/matrix-sdk-crypto-nodejs.
+      // matrix-bot-sdk re-exports it but ESM resolution fails at runtime,
+      // so we use the constant directly.
+      const SQLITE_STORE_TYPE = 0;
+      cryptoProvider = new RustSdkCryptoStorageProvider('store/matrix-crypto', SQLITE_STORE_TYPE as any);
     }
 
     this.client = new MatrixClient(
